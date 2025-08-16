@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atomic Builder - Chemistry Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .score, .timer {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: bold;
+            color: #3498db;
+            min-width: 120px;git credential-manager erase https://github.com
+        }
+        
+        .element-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-radius: 8px;
+        }
+        
+        .element-name {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        
+        .element-symbol {
+            font-size: clamp(2rem, 8vw, 3rem);
+            font-weight: bold;
+            color: #2980b9;
+            margin: 10px 0;
+        }
+        
+        .element-properties {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .particle-control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .particle-control {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .particle-info {
+            flex: 1;
+            padding: 0 10px;
+        }
+        
+        .particle-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .particle-charge {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .particle-count {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .add-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .atom-model {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 50%;
+            background-color: #f9f9f9;
+            border: 2px dashed #bdc3c7;
+        }
+        
+        .nucleus {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #f1c40f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 0.8rem;
+        }
+        
+        .electron-shell {
+            position: absolute;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+        }
+        
+        .particle-in-atom {
+            position: absolute;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            user-select: none;
+        }
+        
+        .proton-in-atom {
+            background-color: #e74c3c;
+            color: white;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .neutron-in-atom {
+            background-color: #7f8c8d;
+            color: white;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .electron-in-atom {
+            background-color: #3498db;
+            color: white;
+            width: 15px;
+            height: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            min-width: 140px;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        #reset-btn {
+            background-color: #95a5a6;
+        }
+        
+        #reset-btn:hover {
+            background-color: #7f8c8d;
+        }
+        
+        #hint-btn {
+            background-color: #f39c12;
+        }
+        
+        #hint-btn:hover {
+            background-color: #d35400;
+        }
+        
+        #submit-btn {
+            background-color: #3498db;
+        }
+        
+        #submit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        #help-btn {
+            background-color: #9b59b6;
+        }
+        
+        #help-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            min-height: 24px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .correct {
+            color: #2ecc71;
+            background-color: #e8f8f0;
+        }
+        
+        .incorrect {
+            color: #e74c3c;
+            background-color: #fdedec;
+        }
+        
+        .hint {
+            color: #f39c12;
+            background-color: #fef5e7;
+        }
+        
+        /* Instructions Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        #help-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 480px) {
+            .atom-model {
+                height: 250px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .action-btn {
+                min-width: 120px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>How to Play Atomic Builder</h2>
+            <h3>Game Objective</h3>
+            <p>Build atoms by adding the correct number of protons, neutrons, and electrons to match the displayed element.</p>
+            
+            <h3>Controls</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <button class="control-btn remove-btn" style="margin-right: 10px;">-</button>
+                    <span style="font-weight: bold;">Remove particles</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: bold; min-width: 30px; text-align: center;">0</span>
+                    <span style="margin-left: 10px;">Current count</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <button class="control-btn add-btn" style="margin-right: 10px;">+</button>
+                    <span style="font-weight: bold;">Add particles</span>
+                </div>
+            </div>
+            
+            <h3>Action Buttons</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0;">
+                <button class="action-btn" style="background-color: #95a5a6;">Reset Atom</button>
+                <button class="action-btn" style="background-color: #f39c12;">Get Hint</button>
+                <button class="action-btn" style="background-color: #3498db;">Submit Atom</button>
+            </div>
+            
+            <h3>Rules</h3>
+            <ol style="line-height: 1.6;">
+                <li><strong>Protons</strong> = Atomic Number (defines the element)</li>
+                <li><strong>Neutrons</strong> ≈ Atomic Mass - Atomic Number</li>
+                <li><strong>Electrons</strong> = Protons (for neutral atoms)</li>
+            </ol>
+            
+            <button id="start-game-btn" class="action-btn" style="display: block; margin: 25px auto 0; background-color: #2ecc71;">Start Game</button>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <button id="help-btn" class="action-btn" onclick="openInstructions()">Help</button>
+        <h1>Atomic Builder</h1>
+        
+        <div class="game-info">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="timer">Time: <span id="time">02:00</span></div>
+        </div>
+        
+        <div class="element-display">
+            <div class="element-name" id="element-name">Element Name</div>
+            <div class="element-symbol" id="element-symbol">X</div>
+            <div class="element-properties">
+                <div>Atomic #: <span id="atomic-number">0</span></div>
+                <div>Mass: ~<span id="atomic-mass">0</span></div>
+            </div>
+        </div>
+        
+        <div class="particle-control-panel">
+            <div class="particle-control">
+                <button class="control-btn remove-btn" onclick="removeParticle('proton')">-</button>
+                <div class="particle-info">
+                    <div class="particle-name">Proton</div>
+                    <div class="particle-charge">+1 charge</div>
+                </div>
+                <div class="particle-count" id="proton-count">0</div>
+                <button class="control-btn add-btn" onclick="addParticle('proton')">+</button>
+            </div>
+            
+            <div class="particle-control">
+                <button class="control-btn remove-btn" onclick="removeParticle('neutron')">-</button>
+                <div class="particle-info">
+                    <div class="particle-name">Neutron</div>
+                    <div class="particle-charge">0 charge</div>
+                </div>
+                <div class="particle-count" id="neutron-count">0</div>
+                <button class="control-btn add-btn" onclick="addParticle('neutron')">+</button>
+            </div>
+            
+            <div class="particle-control">
+                <button class="control-btn remove-btn" onclick="removeParticle('electron')">-</button>
+                <div class="particle-info">
+                    <div class="particle-name">Electron</div>
+                    <div class="particle-charge">-1 charge</div>
+                </div>
+                <div class="particle-count" id="electron-count">0</div>
+                <button class="control-btn add-btn" onclick="addParticle('electron')">+</button>
+            </div>
+        </div>
+        
+        <div class="atom-model" id="atom-model">
+            <div class="nucleus" id="nucleus">Nucleus</div>
+            <!-- Electron shells will be added dynamically -->
+        </div>
+        
+        <div class="action-buttons">
+            <button id="reset-btn" class="action-btn" onclick="resetAtom()">Reset Atom</button>
+            <button id="hint-btn" class="action-btn" onclick="showHint()">Get Hint</button>
+            <button id="submit-btn" class="action-btn" onclick="checkAtom()">Submit Atom</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        // Game elements data (atomic number 1-20)
+        const elements = [
+            { name: "Hydrogen", symbol: "H", atomicNumber: 1, atomicMass: 1 },
+            { name: "Helium", symbol: "He", atomicNumber: 2, atomicMass: 4 },
+            { name: "Lithium", symbol: "Li", atomicNumber: 3, atomicMass: 7 },
+            { name: "Beryllium", symbol: "Be", atomicNumber: 4, atomicMass: 9 },
+            { name: "Boron", symbol: "B", atomicNumber: 5, atomicMass: 11 },
+            { name: "Carbon", symbol: "C", atomicNumber: 6, atomicMass: 12 },
+            { name: "Nitrogen", symbol: "N", atomicNumber: 7, atomicMass: 14 },
+            { name: "Oxygen", symbol: "O", atomicNumber: 8, atomicMass: 16 },
+            { name: "Fluorine", symbol: "F", atomicNumber: 9, atomicMass: 19 },
+            { name: "Neon", symbol: "Ne", atomicNumber: 10, atomicMass: 20 },
+            { name: "Sodium", symbol: "Na", atomicNumber: 11, atomicMass: 23 },
+            { name: "Magnesium", symbol: "Mg", atomicNumber: 12, atomicMass: 24 },
+            { name: "Aluminum", symbol: "Al", atomicNumber: 13, atomicMass: 27 },
+            { name: "Silicon", symbol: "Si", atomicNumber: 14, atomicMass: 28 },
+            { name: "Phosphorus", symbol: "P", atomicNumber: 15, atomicMass: 31 },
+            { name: "Sulfur", symbol: "S", atomicNumber: 16, atomicMass: 32 },
+            { name: "Chlorine", symbol: "Cl", atomicNumber: 17, atomicMass: 35 },
+            { name: "Argon", symbol: "Ar", atomicNumber: 18, atomicMass: 40 },
+            { name: "Potassium", symbol: "K", atomicNumber: 19, atomicMass: 39 },
+            { name: "Calcium", symbol: "Ca", atomicNumber: 20, atomicMass: 40 }
+        ];
+        
+        // Game state
+        let currentElement;
+        let protons = 0;
+        let neutrons = 0;
+        let electrons = 0;
+        let score = 0;
+        let timeLeft = 120; // 2 minutes in seconds
+        let timer;
+        let electronShells = [];
+        let gameStarted = false;
+        
+        // DOM elements
+        const elementNameEl = document.getElementById('element-name');
+        const elementSymbolEl = document.getElementById('element-symbol');
+        const atomicNumberEl = document.getElementById('atomic-number');
+        const atomicMassEl = document.getElementById('atomic-mass');
+        const protonCountEl = document.getElementById('proton-count');
+        const neutronCountEl = document.getElementById('neutron-count');
+        const electronCountEl = document.getElementById('electron-count');
+        const atomModelEl = document.getElementById('atom-model');
+        const nucleusEl = document.getElementById('nucleus');
+        const scoreEl = document.getElementById('score');
+        const timeEl = document.getElementById('time');
+        const feedbackEl = document.getElementById('feedback');
+        const modal = document.getElementById('instructions-modal');
+        const closeBtn = document.querySelector('.close');
+        const startGameBtn = document.getElementById('start-game-btn');
+        
+        // Initialize game
+        function initGame() {
+            // Show instructions first
+            modal.style.display = 'block';
+            
+            // Set up event listeners
+            startGameBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                if (!gameStarted) {
+                    selectRandomElement();
+                    updateAtomDisplay();
+                    startTimer();
+                    gameStarted = true;
+                }
+            });
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                if (!gameStarted) {
+                    selectRandomElement();
+                    updateAtomDisplay();
+                    startTimer();
+                    gameStarted = true;
+                }
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target == modal && !gameStarted) {
+                    selectRandomElement();
+                    updateAtomDisplay();
+                    startTimer();
+                    gameStarted = true;
+                }
+            });
+        }
+        
+        function openInstructions() {
+            modal.style.display = 'block';
+        }
+        
+        // Select a random element
+        function selectRandomElement() {
+            const randomIndex = Math.floor(Math.random() * elements.length);
+            currentElement = elements[randomIndex];
+            
+            elementNameEl.textContent = currentElement.name;
+            elementSymbolEl.textContent = currentElement.symbol;
+            atomicNumberEl.textContent = currentElement.atomicNumber;
+            atomicMassEl.textContent = currentElement.atomicMass;
+            
+            // Reset all particle counts when selecting a new element
+            protons = 0;
+            neutrons = 0;
+            electrons = 0;
+            updateAtomDisplay();
+        }
+        
+        // Add a particle to the atom
+        function addParticle(type) {
+            if (!gameStarted) return;
+            
+            switch(type) {
+                case 'proton':
+                    protons++;
+                    break;
+                case 'neutron':
+                    neutrons++;
+                    break;
+                case 'electron':
+                    electrons++;
+                    break;
+            }
+            
+            updateAtomDisplay();
+        }
+        
+        // Remove a particle from the atom
+        function removeParticle(type) {
+            if (!gameStarted) return;
+            
+            switch(type) {
+                case 'proton':
+                    if (protons > 0) protons--;
+                    break;
+                case 'neutron':
+                    if (neutrons > 0) neutrons--;
+                    break;
+                case 'electron':
+                    if (electrons > 0) electrons--;
+                    break;
+            }
+            
+            updateAtomDisplay();
+        }
+        
+        // Update the atom display
+        function updateAtomDisplay() {
+            // Update particle counts
+            protonCountEl.textContent = protons;
+            neutronCountEl.textContent = neutrons;
+            electronCountEl.textContent = electrons;
+            
+            // Update nucleus display
+            nucleusEl.textContent = `${protons}p, ${neutrons}n`;
+            
+            // Clear previous electron shells
+            electronShells.forEach(shell => {
+                if (shell.parentNode) {
+                    shell.parentNode.removeChild(shell);
+                }
+            });
+            electronShells = [];
+            
+            // Use 2,8,8,2 rule for electron shells (first 20 elements)
+            let remainingElectrons = electrons;
+            const shellCapacity = [2, 8, 8, 2];
+            const shellRadiusIncrement = 80 / shellCapacity.length;
+            for (let i = 0; i < shellCapacity.length; i++) {
+                const shell = document.createElement('div');
+                shell.className = 'electron-shell';
+                const radius = 70 + (i * shellRadiusIncrement);
+                shell.style.width = `${radius * 2}px`;
+                shell.style.height = `${radius * 2}px`;
+                shell.style.top = `${150 - radius}px`;
+                shell.style.left = `${150 - radius}px`;
+                atomModelEl.appendChild(shell);
+                electronShells.push(shell);
+                let electronsInShell = Math.min(shellCapacity[i], remainingElectrons);
+                for (let j = 0; j < electronsInShell; j++) {
+                    let angle = (j * (360 / shellCapacity[i])) * (Math.PI / 180);
+                    const electron = document.createElement('div');
+                    electron.className = 'particle-in-atom electron-in-atom';
+                    electron.textContent = 'e-';
+                    electron.style.top = `${150 + radius * Math.sin(angle) - 7.5}px`;
+                    electron.style.left = `${150 + radius * Math.cos(angle) - 7.5}px`;
+                    atomModelEl.appendChild(electron);
+                }
+                remainingElectrons -= electronsInShell;
+                if (remainingElectrons <= 0) break;
+            }
+        }
+        
+        // Reset the current atom
+        function resetAtom() {
+            protons = 0;
+            neutrons = 0;
+            electrons = 0;
+            // Remove all electron shells and electrons visually
+            electronShells.forEach(shell => {
+                if (shell.parentNode) {
+                    shell.parentNode.removeChild(shell);
+                }
+            });
+            electronShells = [];
+            // Also remove any remaining electrons (in case)
+            const electronsInModel = atomModelEl.querySelectorAll('.electron-in-atom');
+            electronsInModel.forEach(e => e.remove());
+            // Change the displayed atom to a new random element
+            selectRandomElement();
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+        }
+        
+        // Check if the atom is correct
+        function checkAtom() {
+            if (!gameStarted) return;
+            
+            const correctProtons = currentElement.atomicNumber;
+            const correctNeutrons = Math.round(currentElement.atomicMass) - currentElement.atomicNumber;
+            const correctElectrons = currentElement.atomicNumber;
+            
+            if (protons === correctProtons && neutrons === correctNeutrons && electrons === correctElectrons) {
+                // Correct answer
+                score += 10;
+                scoreEl.textContent = score;
+                feedbackEl.textContent = 'Correct! Well done!';
+                feedbackEl.className = 'feedback correct';
+
+                // Clear electron display immediately
+                electronShells.forEach(shell => {
+                    if (shell.parentNode) {
+                        shell.parentNode.removeChild(shell);
+                    }
+                });
+                electronShells = [];
+                // Also remove any remaining electrons (in case)
+                const electronsInModel = atomModelEl.querySelectorAll('.electron-in-atom');
+                electronsInModel.forEach(e => e.remove());
+
+                // Move to next element after a delay
+                setTimeout(() => {
+                    selectRandomElement();
+                    feedbackEl.textContent = '';
+                }, 1500);
+            } else {
+                // Incorrect answer
+                feedbackEl.textContent = 'Not quite right. Try again!';
+                feedbackEl.className = 'feedback incorrect';
+            }
+        }
+        
+        // Show a hint
+        function showHint() {
+            if (!gameStarted) return;
+            
+            const correctProtons = currentElement.atomicNumber;
+            const correctNeutrons = Math.round(currentElement.atomicMass) - currentElement.atomicNumber;
+            
+            feedbackEl.textContent = `Hint: This atom should have ${correctProtons} protons and about ${correctNeutrons} neutrons.`;
+            feedbackEl.className = 'feedback hint';
+        }
+        
+        // Timer functions
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function endGame() {
+            clearInterval(timer);
+            alert(`Game Over! Your final score is ${score}`);
+            // Reset all game state and UI
+            score = 0;
+            timeLeft = 120;
+            protons = 0;
+            neutrons = 0;
+            electrons = 0;
+            scoreEl.textContent = score;
+            timeEl.textContent = '02:00';
+            gameStarted = false;
+            // Clear atom display
+            electronShells.forEach(shell => {
+                if (shell.parentNode) {
+                    shell.parentNode.removeChild(shell);
+                }
+            });
+            electronShells = [];
+            const electronsInModel = atomModelEl.querySelectorAll('.electron-in-atom');
+            electronsInModel.forEach(e => e.remove());
+            protonCountEl.textContent = '0';
+            neutronCountEl.textContent = '0';
+            electronCountEl.textContent = '0';
+            nucleusEl.textContent = 'Nucleus';
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+            // Optionally, show instructions modal again
+            initGame();
+        }
+        
+        // Start the game when page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
